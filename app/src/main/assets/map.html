@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<html>
+<head>
+    <style>
+        html, body {
+        height:100%;
+        margin:0;
+      }
+       #map {
+        height: 80%;
+        width: 100%;
+       }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="debug"></div>
+<script>
+      var resultForReturn =[];
+      var directionsDisplays=[];
+      var directionsService ;
+      var map;
+      var height ;
+      var oceanBeach ;
+      var markerArray = [];
+      var stepDisplay;
+      var rendererOptions;
+      var simpleCunt;
+
+      function callFromAndroid(jsArray){
+           document.getElementById("debug").innerHTML=jsArray;
+          var test =JSON.parse(jsArray);
+
+          for(var i =0;i<2;i++){
+              var display = new google.maps.DirectionsRenderer(rendererOptions);
+              directionsDisplays.push(display);
+              calcRoute(test[i],test[i+1],i)
+          }
+
+      }
+
+      function initMap() {
+          simpleCunt=0;
+          stepDisplay = new google.maps.InfoWindow();
+          directionsService = new google.maps.DirectionsService();
+          var position = {lat: 25.047155, lng: 121.514465};
+          map = new google.maps.Map(document.getElementById('map'), {
+              zoom: 17,
+              center: position
+            });
+            // Create a renderer for directions and bind it to the map.
+            rendererOptions = {
+                map: map
+            }
+            //取得段落1標示
+            // var directionsDisplay1 = new google.maps.DirectionsRenderer(rendererOptions);
+            //取得段落2標示
+            // var directionsDisplay2= new google.maps.DirectionsRenderer(rendererOptions);
+           // directionsDisplay.setMap(map);
+            var marker = new google.maps.Marker({
+              position: position,
+              map: map
+            });
+
+          }
+
+      //路線計算
+      function calcRoute(par1,par2,num) {
+              for (i = 0; i < markerArray.length; i++) {
+                markerArray[i].setMap(null);
+              }
+              var request = {
+              origin:par1,
+              destination:par2,
+              travelMode: 'TRANSIT',
+                transitOptions: {
+                  modes: ['BUS'],
+                  routingPreference: 'FEWER_TRANSFERS'
+                },
+                unitSystem: google.maps.UnitSystem.IMPERIAL
+              };
+              directionsService.route(request, function(response, status) {
+                if (status == 'OK') {
+                  showSteps(response);
+                  directionsDisplays[num].setDirections(response);
+                }
+              });
+      }
+      //路段導航
+      function showSteps(directionResult) {
+          var listForWalkPostion =[];
+          money =directionResult.routes[0].fare.value;
+          var myRoute = directionResult.routes[0].legs[0];
+          //每個分段的轉乘資訊
+          for (var i = 0; i < myRoute.steps.length; i++) {
+              //走路導航
+              if(myRoute.steps[i].steps!=null){
+                for(var x =0;x<myRoute.steps[i].steps.length;x++){
+                    //走路指標
+                    var speak =myRoute.steps[i].steps[x].instructions
+                    //  start_location  開始
+                    //  end_location    結束
+                    //走路的轉折點
+                    var t1 =eval(myRoute.steps[i].steps[x].start_location.lat)();
+                    var t2 =eval(myRoute.steps[i].steps[x].start_location.lng)();
+                    listForWalkPostion.push({lat:t1,lng:t2,notify:speak});
+                }
+               //大眾運輸路段
+              }else if(myRoute.steps[i].transit.line!=null){
+                    //大眾運輸工具 路線名稱
+                    var t1 =eval(myRoute.steps[i].start_location.lat)();
+                    var t2 =eval(myRoute.steps[i].start_location.lng)();
+                    var bus =myRoute.steps[i].transit.line.name+myRoute.steps[i].transit.line.short_name
+                    listForWalkPostion.push({lat:t1,lng:t2,notify:bus});
+              }
+
+              var marker = new google.maps.Marker({
+                position: myRoute.steps[i].start_point,
+                map: map
+              });
+              attachInstructionText(marker, myRoute.steps[i].instructions);
+              markerArray[i] = marker;
+          }
+         // var str = JSON.stringify(listForWalkPostion);
+          resultForReturn.push(listForWalkPostion);
+          simpleCunt++;
+          returnToAndroid();
+      }
+      function attachInstructionText(marker, text) {
+            google.maps.event.addListener(marker, 'click', function() {
+            stepDisplay.setContent(text);
+            stepDisplay.open(map, marker);
+          });
+      }
+      function returnToAndroid(){
+            if(simpleCunt==2){
+                var steps = JSON.stringify(resultForReturn);
+                JsInterface.showInfoFromJs(steps);
+            }else{
+
+            }
+      }
+</script>
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGgxfNALIYB5ngyxEQuvfIswpw96yiA8o&callback=initMap">
+</script>
+</body>
+</html>
