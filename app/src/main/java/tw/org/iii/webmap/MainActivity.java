@@ -24,9 +24,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
     private WebView map;
     private TextView showSteps;
-    private StringBuffer buffer;
     private ArrayList<ArrayList<WayPoint>> travelRoute;
-//    private ArrayList<WayPoint> wayPoints;
     private MyHandler myHandler;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void calRoute() {
 //        map.loadUrl("javascript:calcRoute("+"'台北車站'"+","+"'北投'"+")");
-        String[]  destinations = new String[]{"台北車站","松山文創園區","基隆"};
+        String[]  destinations = new String[]{"台北車站","自然科學博物館","彰化火車站"};
         StringBuffer sb = new StringBuffer();
         sb.append("'[");
         for(int i =0;i<destinations.length ;i++){
@@ -94,10 +92,10 @@ public class MainActivity extends AppCompatActivity {
         }//在js中调用window.AndroidWebView.showInfoFromJs(name)，便会触发此方法。
         @JavascriptInterface
         public void showInfoFromJs(String name) {
+            Log.v("chad",name);
             String st1 =name.replace("<b>"," ");
             String st2 =st1.replace("</b>"," ");
             String st3 =st2.replace("</div>","");
-            buffer =new StringBuffer();
             try {
                 JSONArray jsonArray = new JSONArray(st3);
                 Log.v("chad",jsonArray.length()+"");
@@ -110,7 +108,9 @@ public class MainActivity extends AppCompatActivity {
                         String speak = object.get("notify").toString().replace("<div style=\"font-size:0.9em\">","");
                         String lat = object.get("lat").toString();
                         String lng = object.get("lng").toString();
-                        wayPoints.add(new WayPoint(lat,lng,speak));
+                        String time = object.get("time").toString();
+                        Log.v("chad",time);
+                        wayPoints.add(new WayPoint(lat,lng,speak,time));
                     }
                     travelRoute.add(wayPoints);
                 }
@@ -125,10 +125,9 @@ public class MainActivity extends AppCompatActivity {
     private class MyHandler extends Handler{
         @Override
         public void handleMessage(Message msg) {
-            Log.v("chad","hand OK");
             for(ArrayList<WayPoint> route :travelRoute) {
                 for (WayPoint wp : route) {
-                    showSteps.append(wp.notify + "\r\n");
+                    showSteps.append(wp.notify +wp.time+ "\r\n");
                 }
             }
         }
@@ -138,7 +137,9 @@ class WayPoint{
     String notify;
     String lat;
     String lng;
-    WayPoint(String lat,String lng,String notify){
+    String time;
+    WayPoint(String lat,String lng,String notify,String time){
+        this.time =time;
         this.notify=notify;
         this.lat=lat;
         this.lng=lng;
