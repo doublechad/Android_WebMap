@@ -1,5 +1,6 @@
 package tw.org.iii.webmap;
 
+import android.app.ActionBar;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Handler;
@@ -27,7 +28,6 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     private WebView map;
-    private TextView showSteps;
     private ArrayList<ArrayList<WayPoint>> travelRoute;
     private MyHandler myHandler;
     private ViewPager pager;
@@ -39,13 +39,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        destinations = new String[]{"台中車站","自然科學博物館","奮起湖"};
+        destinations = new String[]{"淡水","101大樓","漁人碼頭"};
+        init();
+        initMap();
+
+    }
+    private void init(){
         map = findViewById(R.id.map);
         myHandler =new MyHandler();
         hintsFrahgment= new ArrayList<>();
-//        showSteps = findViewById(R.id.showSteps);
         travelRoute=new ArrayList<>();
-        for(int i=0;i<destinations.length-1;i++){
+        for(int i=0;i<destinations.length;i++){
             HintFragment hf =new HintFragment();
             hintsFrahgment.add(hf);
         }
@@ -53,10 +57,7 @@ public class MainActivity extends AppCompatActivity {
         fragmentAdpater = new MyFragmentAdpater(fm);
         pager =findViewById(R.id.pager);
         pager.setAdapter(fragmentAdpater);
-        initMap();
-
     }
-
 
 
     private void initMap(){
@@ -71,21 +72,31 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void calRoute() {
-//        map.loadUrl("javascript:calcRoute("+"'台北車站'"+","+"'北投'"+")");
+    public void calRoute(String nowPostion,String target) {
         StringBuffer sb = new StringBuffer();
         sb.append("'[");
-        for(int i =0;i<destinations.length ;i++){
-            if(i==0) {
-                sb.append("\""+destinations[i]+"\"");
-            }else{
-                sb.append(","+"\""+destinations[i]+"\"");
-            }
-        }
+//        for(int i =0;i<destinations.length ;i++){
+//            if(i==0) {
+//                sb.append("\""+destinations[i]+"\"");
+//            }else{
+//                sb.append(","+"\""+destinations[i]+"\"");
+//            }
+//        }
+        sb.append("\""+nowPostion+"\"");
+        sb.append(","+"\""+target+"\"");
         sb.append("]'");
+
         Log.v("chad",sb.toString());
         map.loadUrl("javascript:callFromAndroid("+sb.toString()+")");
+//        new MyThread(nowPostion,target).start();
 
+
+    }
+
+    public void start(View view) {
+
+        Log.v("chad",pager.getCurrentItem()+"");
+        calRoute("台北車站",destinations[pager.getCurrentItem()]);
     }
 
     private class myWebViewClient extends WebViewClient{
@@ -96,9 +107,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onPageFinished(WebView view, String url) {
-//            map.loadUrl("javascript:calcRoute("+"'台北車站'"+","+"'北投'"+")");
             super.onPageFinished(view, url);
-            calRoute();
+
 
         }
     }
@@ -114,21 +124,22 @@ public class MainActivity extends AppCompatActivity {
             String st1 =name.replace("<b>"," ");
             String st2 =st1.replace("</b>"," ");
             String st3 =st2.replace("</div>","");
+            String st4 =st3.replace("</span>","");
             try {
-                JSONArray jsonArray = new JSONArray(st3);
+                JSONArray jsonArray = new JSONArray(st4);
                 Log.v("chad",jsonArray.length()+"");
                 for(int i=0;i<jsonArray.length();i++){
                     ArrayList<WayPoint> wayPoints =new ArrayList<>();
                     JSONArray array =(JSONArray)jsonArray.get(i);
-//                    Log.v("chad",array.length()+"");
                         for(int y=0;y<array.length();y++){
                         JSONObject object = (JSONObject)array.getJSONObject(y);
                         String speak = object.get("notify").toString().replace("<div style=\"font-size:0.9em\">","");
+                        String speak2 = speak.replace("<span class=\"location\">","");
                         String lat = object.get("lat").toString();
                         String lng = object.get("lng").toString();
                         String time = object.get("time").toString();
                         Log.v("chad",time);
-                        wayPoints.add(new WayPoint(lat,lng,speak,time));
+                        wayPoints.add(new WayPoint(lat,lng,speak2,time));
                     }
                     travelRoute.add(wayPoints);
                 }
@@ -143,14 +154,28 @@ public class MainActivity extends AppCompatActivity {
     private class MyHandler extends Handler{
         @Override
         public void handleMessage(Message msg) {
-            for(ArrayList<WayPoint> route :travelRoute) {
-                int index =travelRoute.indexOf(route);
-                HintFragment hf = (HintFragment) hintsFrahgment.get(index);
-                for (WayPoint wp : route) {
+//            for(ArrayList<WayPoint> route :travelRoute) {
+//                int index =travelRoute.indexOf(route);
+            Log.v("chad",pager.getCurrentItem()+"handler");
+                HintFragment hf = (HintFragment) hintsFrahgment.get(pager.getCurrentItem());
+                for (WayPoint wp : travelRoute.get(0)) {
                     hf.writeHints(wp.notify +wp.time+ "\r\n");
 //                    showSteps.append(wp.notify +wp.time+ "\r\n");
                 }
             }
+//        }
+    }
+    private class MyThread extends  Thread{
+        private String nowPostion;
+        private String target;
+        MyThread(String nowPostion,String target){
+            this.nowPostion =nowPostion;
+            this.target=target;
+        }
+        @Override
+        public void run() {
+
+
         }
     }
     private class MyFragmentAdpater extends FragmentPagerAdapter{
@@ -166,7 +191,12 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public int getCount() {
-            return (destinations.length-1);
+            return (destinations.length);
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return destinations[position];
         }
     }
 }

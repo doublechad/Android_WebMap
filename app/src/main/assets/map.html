@@ -8,14 +8,13 @@
         margin:0;
       }
        #map {
-        height: 80%;
+        height:100%;
         width: 100%;
        }
     </style>
 </head>
 <body>
 <div id="map"></div>
-<div id="debug"></div>
 <script>
       //the Array return for Android
       var resultForReturn =[];
@@ -34,7 +33,7 @@
 
           course=JSON.parse(jsArray);
           routQuantity = course.length-1;
-          document.getElementById("debug").innerHTML=routQuantity;
+          //document.getElementById("debug").innerHTML=routQuantity;
           for(var i =0;i<routQuantity;i++){
               var display = new google.maps.DirectionsRenderer(rendererOptions);
               directionsDisplays.push(display);
@@ -70,7 +69,7 @@
 
       //路線計算
       function calcRoute(par1,par2,num,tt) {
-               document.getElementById("debug").innerHTML='calcRoute'+num;
+               //document.getElementById("debug").innerHTML='calcRoute'+num;
               for (i = 0; i < markerArray.length; i++) {
                 markerArray[i].setMap(null);
               }
@@ -80,7 +79,7 @@
                 travelMode: 'TRANSIT',
                   transitOptions: {
                     departureTime: new Date(tt),
-                    modes: ['BUS'],
+                    modes: ['RAIL','BUS'],
                     routingPreference: 'FEWER_TRANSFERS'
                   },
                   unitSystem: google.maps.UnitSystem.IMPERIAL
@@ -88,7 +87,7 @@
               directionsService.route(request, function(response, status) {
                 if (status == 'OK') {
                     simpleCunt++;
-                    document.getElementById("debug").innerHTML="status == OK"+':'+simpleCunt;
+                    //document.getElementById("debug").innerHTML="status == OK"+':'+simpleCunt;
                     showSteps(response);
                     directionsDisplays[num].setDirections(response);
                 }else{
@@ -103,7 +102,7 @@
           //抵達時間
           var arrival  = directionResult.routes["0"].legs["0"].arrival_time.value;
           var arrival_million =Date.parse(arrival);
-          document.getElementById("debug").innerHTML=arrival;
+          //document.getElementById("debug").innerHTML=arrival;
           //蒐集各點的陣列
           var listForWalkPostion =[];
           var myRoute = directionResult.routes[0].legs[0];
@@ -161,13 +160,13 @@
       }
       function returnToAndroid(){
              //document.getElementById("debug").innerHTML=simpleCunt+':'+routQuantity;
-            if(simpleCunt==routQuantity){
+           // if(simpleCunt==routQuantity){
               //  document.getElementById("debug").innerHTML='simpleCunt==routQuantity';
                 var steps = JSON.stringify(resultForReturn);
                 JsInterface.showInfoFromJs(steps);
-            }else{
+          //  }else{
 
-            }
+          //  }
       }
 </script>
 <script async defer
