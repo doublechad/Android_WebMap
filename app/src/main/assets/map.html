@@ -103,6 +103,7 @@
           //抵達時間
           var arrival  = directionResult.routes["0"].legs["0"].arrival_time.value;
           var arrival_million =Date.parse(arrival);
+          document.getElementById("debug").innerHTML=arrival;
           //蒐集各點的陣列
           var listForWalkPostion =[];
           var myRoute = directionResult.routes[0].legs[0];
@@ -128,11 +129,11 @@
                     var t1 =eval(myRoute.steps[i].start_location.lat)();
                     var t2 =eval(myRoute.steps[i].start_location.lng)();
                     if(myRoute.steps[i].transit.line.vehicle.type=='BUS'){
-                         var bus =temp.name+temp.short_name;
-                         var departure = myRoute.steps[i].transit.departure_time.text;
+                         var bus ="路線名稱:"+temp.name+"代號:"+temp.short_name;
+                         var departure ="預計發車時間:"+myRoute.steps[i].transit.departure_time.text;
                     }else{
-                        var bus =temp.short_name
-                        var departure = myRoute.steps[i].transit.departure_time.text;
+                        var bus ="代號:"+temp.short_name
+                        var departure ="預計發車時間:"+myRoute.steps[i].transit.departure_time.text;
                     }
                     listForWalkPostion.push({lat:t1,lng:t2,notify:bus,time:departure});
               }
@@ -159,9 +160,9 @@
           });
       }
       function returnToAndroid(){
-             document.getElementById("debug").innerHTML=simpleCunt+':'+routQuantity;
+             //document.getElementById("debug").innerHTML=simpleCunt+':'+routQuantity;
             if(simpleCunt==routQuantity){
-                document.getElementById("debug").innerHTML='simpleCunt==routQuantity';
+              //  document.getElementById("debug").innerHTML='simpleCunt==routQuantity';
                 var steps = JSON.stringify(resultForReturn);
                 JsInterface.showInfoFromJs(steps);
             }else{

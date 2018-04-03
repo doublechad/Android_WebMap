@@ -4,6 +4,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -26,14 +30,29 @@ public class MainActivity extends AppCompatActivity {
     private TextView showSteps;
     private ArrayList<ArrayList<WayPoint>> travelRoute;
     private MyHandler myHandler;
+    private ViewPager pager;
+    private FragmentManager fm;
+    private String[] destinations;
+    private MyFragmentAdpater fragmentAdpater;
+    private ArrayList<Fragment> hintsFrahgment;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        destinations = new String[]{"台中車站","自然科學博物館","奮起湖"};
         map = findViewById(R.id.map);
         myHandler =new MyHandler();
-        showSteps = findViewById(R.id.showSteps);
+        hintsFrahgment= new ArrayList<>();
+//        showSteps = findViewById(R.id.showSteps);
         travelRoute=new ArrayList<>();
+        for(int i=0;i<destinations.length-1;i++){
+            HintFragment hf =new HintFragment();
+            hintsFrahgment.add(hf);
+        }
+        fm=getSupportFragmentManager();
+        fragmentAdpater = new MyFragmentAdpater(fm);
+        pager =findViewById(R.id.pager);
+        pager.setAdapter(fragmentAdpater);
         initMap();
 
     }
@@ -54,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void calRoute() {
 //        map.loadUrl("javascript:calcRoute("+"'台北車站'"+","+"'北投'"+")");
-        String[]  destinations = new String[]{"台北車站","自然科學博物館","彰化火車站"};
         StringBuffer sb = new StringBuffer();
         sb.append("'[");
         for(int i =0;i<destinations.length ;i++){
@@ -126,10 +144,29 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
             for(ArrayList<WayPoint> route :travelRoute) {
+                int index =travelRoute.indexOf(route);
+                HintFragment hf = (HintFragment) hintsFrahgment.get(index);
                 for (WayPoint wp : route) {
-                    showSteps.append(wp.notify +wp.time+ "\r\n");
+                    hf.writeHints(wp.notify +wp.time+ "\r\n");
+//                    showSteps.append(wp.notify +wp.time+ "\r\n");
                 }
             }
+        }
+    }
+    private class MyFragmentAdpater extends FragmentPagerAdapter{
+
+        public MyFragmentAdpater(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            return hintsFrahgment.get(position);
+        }
+
+        @Override
+        public int getCount() {
+            return (destinations.length-1);
         }
     }
 }
