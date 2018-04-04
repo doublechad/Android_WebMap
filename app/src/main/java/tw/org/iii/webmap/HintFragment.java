@@ -27,4 +27,7 @@ public class HintFragment extends Fragment {
     public void writeHints(String hint){
         hints.append(hint);
     }
+    public void clearText(){
+        hints.setText("");
+    }
 }

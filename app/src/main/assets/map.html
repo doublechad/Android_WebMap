@@ -29,8 +29,10 @@
       //統計，目前GOOGLEMAP的回應次數
       var simpleCunt;
       var course;
+      var infoWindow;
+      var marker;
+      var myIcon;
       function callFromAndroid(jsArray){
-
           course=JSON.parse(jsArray);
           routQuantity = course.length-1;
           //document.getElementById("debug").innerHTML=routQuantity;
@@ -38,7 +40,8 @@
               var display = new google.maps.DirectionsRenderer(rendererOptions);
               directionsDisplays.push(display);
           }
-            calcRoute(course[0],course[0+1],0,"")
+          var start = new google.maps.LatLng(course[0], course[1]);
+          calcRoute(start,course[2],0,"")
 
       }
 
@@ -55,18 +58,46 @@
             rendererOptions = {
                 map: map
             }
-            //取得段落1標示
-            // var directionsDisplay1 = new google.maps.DirectionsRenderer(rendererOptions);
-            //取得段落2標示
-            // var directionsDisplay2= new google.maps.DirectionsRenderer(rendererOptions);
-           // directionsDisplay.setMap(map);
-            var marker = new google.maps.Marker({
-              position: position,
+          infoWindow= new google.maps.InfoWindow({map: map});
+          myIcon = {
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                fillColor: 'blue',
+                fillOpacity: 0.8,
+                scale: 5,
+                strokeColor: 'blue',
+                strokeWeight: 1,
+                rotation : 0
+          };
+         marker = new google.maps.Marker({
+              position: map.getCenter(),
+              icon: myIcon,
+              draggable: false,
               map: map
-            });
+           });
 
           }
+      //設置使用者位置
+      function changeMark(par1,par2,rotationValue){
+           var pos = {
+              lat: par1,
+              lng: par2
+            };
+            myIcon = {
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                fillColor: 'blue',
+                fillOpacity: 0.8,
+                scale: 5,
+                strokeColor: 'blue',
+                strokeWeight: 1,
+                rotation :rotationValue
+          };
+            map.setCenter(pos);
+            marker.setIcon(myIcon)
+            marker.setPosition(pos);
+            map.setCenter(pos);
+            marker.setPosition(pos);
 
+      }
       //路線計算
       function calcRoute(par1,par2,num,tt) {
                //document.getElementById("debug").innerHTML='calcRoute'+num;
@@ -112,7 +143,7 @@
               if(myRoute.steps[i].steps!=null){
                 for(var x =0;x<myRoute.steps[i].steps.length;x++){
                     //走路指標
-                    var speak =myRoute.steps[i].steps[x].instructions
+                    var speak =myRoute.steps[i].steps[x].instructions+""
                     //  start_location  開始
                     //  end_location    結束
                     //走路的轉折點
